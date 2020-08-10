@@ -80,7 +80,7 @@ class Snippet(admin.ModelAdmin):
 @admin.register(models.TelegramGroup)
 class TelegramGroup(admin.ModelAdmin):
     list_display = ('id', 'chat_id', 'group')
-    search_fields = ('name', *USER_SEARCH_FILTER)
+    search_fields = ('name', 'chat_id', 'id', 'link', 'group__name')
     list_filter = ('group__type',)
     readonly_fields = ('id',)
     date_hierarchy = 'group__creation_date'
