@@ -14,5 +14,6 @@ urlpatterns = (
     path('groups/<int:page>/', views.Groups.as_view(), name='groups'),
     path('telegram-groups/<int:group_id>/<int:page>/', views.TelegramGroups.as_view(), name='telegram_groups'),
     path('create-telegram-group/<int:group_id>/', views.CreateTelegramGroup.as_view(), name='create_telegram_group'),
-    path('telegram-group/<int:pk>/', views.TelegramGroup.as_view(), name='telegram_group')
+    path('telegram-group/<int:pk>/', views.TelegramGroup.as_view(), name='telegram_group'),
+    path('delete-telegram-group/<int:pk>/', views.DeleteTelegramGroup.as_view(), name='delete_telegram_group')
 )

@@ -1,4 +1,4 @@
-from django.views.generic import CreateView, ListView
+from django.views.generic import CreateView, ListView, DeleteView
 from django.views.generic.detail import DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
@@ -175,6 +175,23 @@ class CreateTelegramGroup(UserIsInGroup, CreateView):
     
     def get_success_url(self):
         return reverse('snippets:telegram_group', kwargs={'pk': self.object.group.id})
+
+
+class DeleteTelegramGroup(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = models.TelegramGroup
+    template_name = 'snippets/confirm_delete.html'
+    
+    def get_success_url(self):
+        return reverse('snippets:telegram_groups', kwargs={'group_id': self.object.group.id, 'page': 1})
+    
+    def test_func(self):
+        try:
+            models.Member.objects.get(
+                user=self.request.user, group=self.get_object().group, rank=models.Member.Rank.owner
+                )
+        except models.Member.DoesNotExists:
+            return False
+        return True
 
 
 @login_required
