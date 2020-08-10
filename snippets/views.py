@@ -4,12 +4,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.shortcuts import reverse, redirect
-from . import forms, models, actions, serializers
+from . import forms, models, serializers, types
 from .mixins import UserIsInGroup
 from .functions import take_action
 from django.utils.text import slugify
 from rest_framework.generics import ListAPIView
 from django.db.models import Q
+from django.http import HttpResponseBadRequest, HttpResponseForbidden
 
 
 class Group(DetailView):
@@ -216,9 +217,17 @@ def join_group(request, group_id):
 
 
 @login_required
-def snippet_actions(request, snippet_id:int, action: str):
-    snippet = get_object_or_404(models.Snippet, id=snippet_id)
-    if snippet.user != request.user:
+def take_actions(request, object_id: int, object_type: str, action: str):
+    try:
+        object_type = actions.Types(object_type)
+        action = actions.Actions(action)
+    except ValueError:
+        return HttpResponseBadRequest('Invalid types !')
+    if object_type is types.Types.SNIPPET:
+        target_object = get_object_or_404(models.Snippet, id=object_id)
+    else:
+        target_object = get_object_or_404(models.Member, id=object_id)
+    if target_object.user != request.user:
         try:
             models.Member.objects.get(
                 user=request.user,
@@ -226,11 +235,17 @@ def snippet_actions(request, snippet_id:int, action: str):
                 group=snippet.group
                 )
         except models.Member.DoesNotExists:
-            pass
+            return HttpResponseForbidden('You are not a group admin !')
         else:
-            take_action(snippet, action)
-    else:
+            take_snippet_action(snippet, action)
+    elif action is types.Actions.DELETE or object_type is not types.Types.Member:
         take_action(snippet, action)
-    if action is actions.close:
+    if action is types.Actions.CLOSE_SNIPPET:
         return redirect('snippets:snippet', pk=snippet_id)
-    return redirect('snippets:snippets', groups=snippet.group.id
+    elif action is types.Actions.DELETE:
+        if object_type is types.Types.SNIPPET:
+            return redirect(f'{reverse("snippets:snippets", kwargs={"page": 1})}?groups={target_object.group.id}')
+        else:
+            return redirect('account:memberships', page=1)
+    else:
+        return redirect('snippets:members', group_id=target_object.group.id, page=1)

@@ -1,10 +1,13 @@
-from .models import Snippet
-from . import actions
+from .models import Snippet, Member
+from . import types
 
 
-def take_action(snippet: Snippet, action: str):
-    if action is actions.close:
-        snippet.status = Snippet.Status.closed
-        snippet.save()
+def take_action(target_object, action: actions.Actions):
+    if action is not types.Actions.DELETE:
+        if action is types.Actions.CLOSE_SNIPPET:
+            target_object.status = Snippet.Status.closed
+        else:
+            target_object.status = Member.Status.member
+        target_object.save()
     else:
-        snippet.delete()
+        target_object.delete()
