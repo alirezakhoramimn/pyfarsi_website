@@ -79,12 +79,12 @@ class Snippet(admin.ModelAdmin):
     
 @admin.register(models.TelegramGroup)
 class TelegramGroup(admin.ModelAdmin):
-    list_display = ('id', 'name', 'group', 'creation_date')
+    list_display = ('id', 'chat_id', 'group')
     search_fields = ('name', *USER_SEARCH_FILTER)
-    list_filter = ('status', 'group__type', 'user__is_staff')
-    readonly_fields = ('creation_date', 'id')
-    date_hierarchy = 'creation_date'
+    list_filter = ('group__type',)
+    readonly_fields = ('id',)
+    date_hierarchy = 'group__creation_date'
     list_per_page = 15
     fieldsets = (
-        ('Information', {'fields': (('name', 'slug'), 'code', ('group', 'user'))}),)
+        ('Information', {'fields': ('id', 'chat_id', 'group')}),
     )
