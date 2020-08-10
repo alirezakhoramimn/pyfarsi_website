@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.shortcuts import reverse, redirect
 from . import forms, models, actions, serializers
+from .mixins import UserIsInGroup
 from .functions import take_action
 from django.utils.text import slugify
 from rest_framework.generics import ListAPIView
@@ -140,6 +141,42 @@ class GetGroups(ListAPIView):
             )
 
 
+class TelegramGroup(UserIsInGroup, DetailView):
+    model = models.TelegramGroup
+    template_name = 'snippets/telegram_group.html'
+
+
+class TelegramGroups(UserIsInGroup, ListView):
+    template_name = 'snippets/telegram_groups.html'
+    paginate_by = 15
+
+    def get_queryset(self):
+        result = models.TelegramGroup.objects.filter(group=self.target_group)
+        if self.request.GET.get('q'):
+            try:
+                chat_id = int(self.request.GET['q'])
+            except ValueError:
+                return result
+            result = result.filter(chat_id__contains=chat_id)
+        return result
+
+
+class CreateTelegramGroup(UserIsInGroup, CreateView):
+    model = models.TelegramGroup
+    owner_permission = True
+    fields = ('chat_id', 'link')
+    template_name = 'snippets/create_telegram_group.html'
+
+    def form_valid(self, form):
+        self.object = form.save(False)
+        self.object.group = models.Group
+        self.object.save()
+        return reidrect(self.get_success_url())
+    
+    def get_success_url(self):
+        return reverse('snippets:telegram_group', kwargs={'pk': self.object.group.id})
+
+
 @login_required
 def join_group_with_link(request, invite_id):
     invite = get_object_or_404(models.InviteLink, invite_id=invite_id)
@@ -179,4 +216,4 @@ def snippet_actions(request, snippet_id:int, action: str):
         take_action(snippet, action)
     if action is actions.close:
         return redirect('snippets:snippet', pk=snippet_id)
-    return redirect('snippets:snippets', groups=snippet.group.id)
+    return redirect('snippets:snippets', groups=snippet.group.id
