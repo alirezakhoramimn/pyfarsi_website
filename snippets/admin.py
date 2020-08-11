@@ -22,23 +22,24 @@ class Group(admin.ModelAdmin):
 
 @admin.register(models.Member)
 class Member(admin.ModelAdmin):
-    list_display = ('id', 'group', 'user', 'date_joined')
+    list_display = ('id', 'group', 'user', 'status', 'date_joined')
     search_fields = ('group__name', *USER_SEARCH_FILTER)
-    list_filter = ('group__type', 'user__is_staff')
+    list_filter = ('group__type', 'user__is_staff', 'status')
     readonly_fields = ('date_joined', 'id')
     date_hierarchy = 'date_joined'
     list_per_page = 15
     fieldsets = (
         ('Information', {'fields': ('id', 'group', 'user')}),
-        ('Status', {'fields': ('date_joined',)})
+        ('Status', {'fields': ('date_joined', 'status')})
     )
 
 
 @admin.register(models.InviteLink)
 class InviteLink(admin.ModelAdmin):
     list_display = ('invite_id', 'group', 'status', 'users_joined', 'creation_date')
-    search_fields = ('group__name',)
-    list_filter = ('status', 'group__type')
+    search_fields = ('group__name', 'invite_id')
+    date_hierarchy = 'creation_date'
+    list_filter = ('status', 'group__type', 'status')
     readonly_fields = ('invite_id', 'creation_date')
     list_per_page = 15
     fieldsets = (
@@ -63,15 +64,15 @@ class UserInvite(admin.ModelAdmin):
 
 @admin.register(models.Snippet)
 class Snippet(admin.ModelAdmin):
-    list_display = ('id', 'name', 'user', 'group', 'status', 'creation_date')
+    list_display = ('id', 'name', 'user', 'group', 'status', 'lang', 'creation_date')
     search_fields = ('name', 'group__name', *USER_SEARCH_FILTER)
-    list_filter = ('status', 'group__type', 'user__is_staff')
+    list_filter = ('status', 'group__type', 'user__is_staff', 'lang')
     readonly_fields = ('creation_date', 'id')
     date_hierarchy = 'creation_date'
     prepopulated_fields = {'slug': ('name',)}
     list_per_page = 15
     fieldsets = (
-        ('Information', {'fields': (('name', 'slug'), 'code', ('group', 'user'))}),
+        ('Information', {'fields': (('name', 'slug'), ('code', 'lang'), ('group', 'user'))}),
         ('Status', {'fields': ('status', 'creation_date')}),
         ('Description', {'fields': ('description',)})
     )
@@ -88,3 +89,12 @@ class TelegramGroup(admin.ModelAdmin):
     fieldsets = (
         ('Information', {'fields': ('id', 'chat_id', 'group')}),
     )
+
+
+@admin.register(models.ScreenShot)
+class ScreenShot(admin.ModelAdmin):
+    list_display = ('id', 'snippet')
+    search_fields = ('id', 'snippet__name', 'snippet__user__username')
+    readonly_fields = ('id',)
+    list_per_page = 15
+    fieldsets = (('Information', {'fields': ('id', 'snippet')}))
