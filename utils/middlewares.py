@@ -10,4 +10,4 @@ class SaveIP:
         if request.user.is_authenticated:
             request.user.ip = get_client_ip(request)[0]
             request.user.save()
-            return self.get_response(request)
+        return self.get_response(request)
