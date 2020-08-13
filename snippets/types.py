@@ -10,3 +10,4 @@ class Actions(Enum):
 class Types(Enum):
     SNIPPET = 'snippet'
     MEMBER = 'member'
+    ALL = 'all'

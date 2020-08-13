@@ -4,13 +4,15 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.shortcuts import reverse, redirect
-from . import forms, models, serializers, types
+from . import forms, models, serializers, types, permissions
+from account.serializers import GetUser
 from .mixins import UserIsInGroup
 from .functions import take_action
 from django.utils.text import slugify
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView
 from django.db.models import Q
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
+from account.models import User
 
 
 class Group(DetailView):
@@ -134,7 +136,7 @@ class Snippet(UserPassesTestMixin, DetailView):
     
 
 class GetGroups(ListAPIView):
-    serializer_class = serializers.GetGroups
+    serializer_class = serializers.GetGroup
     
     def get_queryset(self):
         return models.Group.objects.filter(
@@ -164,7 +166,7 @@ class TelegramGroups(UserIsInGroup, ListView):
 
 class CreateTelegramGroup(UserIsInGroup, CreateView):
     model = models.TelegramGroup
-    owner_permission = True
+    permissions = (models.Member.Rank.owner,)
     fields = ('chat_id', 'link')
     template_name = 'snippets/create_telegram_group.html'
 
@@ -193,6 +195,23 @@ class DeleteTelegramGroup(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         except models.Member.DoesNotExists:
             return False
         return True
+
+
+class GetUsers(ListAPIView):
+    serializer_class = GetUser
+
+    def get_queryset(self):
+        return User.objects.filter(username__icontains=self.request.GET.get('q', ''))
+
+
+class CreateUserInvites(CreateAPIView):
+    serializer_class = serializers.CreateUserInvite
+    permission_classes = (permissions.UserIsGroupAdmin,)
+    pagination_class = None
+
+    def get_serializer(self, *args, **kwargs):
+        kwargs['many'] = True
+        return super().get_serializer(*args, **kwargs)
 
 
 @login_required

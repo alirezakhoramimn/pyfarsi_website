@@ -16,4 +16,3 @@ class Snippet(forms.ModelForm):
     class Meta:
         model = models.Snippet
         fields = ('code', 'description', 'name', 'screenshots', 'lang')
-
