@@ -13,6 +13,7 @@ from rest_framework.generics import ListAPIView, CreateAPIView
 from django.db.models import Q
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from account.models import User
+from utils.functions import get_filters
 
 
 class Group(DetailView):
@@ -203,6 +204,20 @@ class CreateUserInvites(CreateAPIView):
     def get_serializer(self, *args, **kwargs):
         kwargs['many'] = True
         return super().get_serializer(*args, **kwargs)
+
+
+class Members(UserIsInGroup, ListView):
+    template_name = 'snippets/members.html'
+    paginate_by = 15
+    
+    def get_queryset(self):
+        members = models.Member.objects.filter(group=self.target_group)
+        if keyword := self.reuqest.GET.get('q'):
+            members = members.filter(user__username__icontains=keyword)
+        if self.request.GET.get('ranks') and \
+            rank_filters := get_filters(self.request.GET['rank'], models.Member.Rank):
+            members = members.filter(user__rank__in=rank_filters)
+        return members
 
 
 @login_required
