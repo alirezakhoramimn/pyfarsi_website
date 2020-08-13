@@ -21,12 +21,13 @@ class Group(DetailView):
     model = models.Group
 
     def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         if self.request.user.is_authenticated:
             try:
-                self.extra_context = {'member': models.Member.objects.get(user=request.user, group=self.object)}
+                context['member'] = models.Member.objects.get(user=request.user, group=self.object)
             except models.Member.DoesNotExists:
                 pass
-        return super().get_context_data()
+        return context
 
 
 class Groups(ListView):
@@ -107,8 +108,9 @@ class CreateSnippet(UserIsInGroup, CreateView):
         return redirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):
-        self.extra_context = {'group_id': self.kwargs['group_id']}
-        return super().get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
+        context['group_id'] = self.kwargs['group_id']
+        return context
 
 
 class Snippet(UserPassesTestMixin, DetailView):
@@ -123,8 +125,9 @@ class Snippet(UserPassesTestMixin, DetailView):
             return self.object.group.type == models.Group.Type.public
 
     def get_context_data(self, **kwargs):
-        self.extra_context = {'screenshots': self.object.screenshot_snippet.all()}
-        return super().get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
+        context['screenshots'] = self.object.screenshot_snippet.all()
+        return context
     
 
 class GetGroups(ListAPIView):
@@ -218,6 +221,18 @@ class Members(UserIsInGroup, ListView):
             rank_filters := get_filters(self.request.GET['rank'], models.Member.Rank):
             members = members.filter(user__rank__in=rank_filters)
         return members
+
+
+class Member(UserIsInGroup, DetailView):
+    model = models.Member
+    template_name = 'snippets/member.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['last_snippets'] = models.Snippets.objects.filter(
+            group=self.target_group, user=self.object.user
+            )[:10]
+        return context
 
 
 @login_required

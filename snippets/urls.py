@@ -18,5 +18,6 @@ urlpatterns = (
     path('delete-telegram-group/<int:pk>/', views.DeleteTelegramGroup.as_view(), name='delete_telegram_group'),
     path('get-users/', views.GetUsers.as_view(), name='get_users'),
     path('create-user-invites/<int:group_id>/', views.CreateUserInvites.as_view(), name='create_user_invites'),
-    path('member/<int:group_id>/<int:page>/', views.Members.as_view(), name='members')
+    path('members/<int:group_id>/<int:page>/', views.Members.as_view(), name='members'),
+    path('member/<int:pk>/', views.Member.as_view(), name='member')
 )
