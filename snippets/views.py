@@ -87,7 +87,7 @@ class CreateGroup(LoginRequiredMixin, CreateView):
         return reverse('snippets:group', kwargs={'pk': self.object.id, 'slug': self.object.slug})
 
 
-class CreateSnippet(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class CreateSnippet(UserIsInGroup, CreateView):
     form_class = forms.Snippet
     template_name = 'snippets/create_snippet.html'
     redirect_field_name = None
@@ -95,19 +95,10 @@ class CreateSnippet(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     def get_success_url(self):
         return reverse('snippets:snippet', kwargs={'pk': self.object.id})
 
-    def test_func(self):
-        group = models.Group.objects.get(id=self.kwargs['group_id'])
-        try:
-            return models.Member.objects.get(user=self.request.user, group=group)
-        except models.Member.DoesNotExists:
-            return group.type == models.Group.Type.public
-
     def form_valid(self, form):
         self.object = form.save(False)
         self.object.user = self.request.user
-        self.object.group = get_object_or_404(
-            models.Member, user=self.request.user, group__id=self.kwargs['group_id']
-        ).group
+        self.object.group = self.target_group
         self.object.slug = slugify(self.object.name, True)
         self.object.save()
         for screenshot in self.request.FILES.getlist('screenshots'):

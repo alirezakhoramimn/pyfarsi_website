@@ -15,4 +15,4 @@ class UserIsInGroup(LoginRequiredMixin, UserPassesTestMixin):
             membership = Member.objects.get(user=self.request.user, group=self.target_group)
         except Member.DoesNotExist:
             return False
-        return self.permissions == Types.ALL or membership.rank in self.permissions
+        return self.permissions is Types.ALL or membership.rank in self.permissions
