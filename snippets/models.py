@@ -91,7 +91,7 @@ class UserInvite(models.Model):
     class Status(models.TextChoices):
         pending = 'p', translations.pending
         accepted = 'a', gettext_lazy('accepted')
-        denied = 'd', gettext_lazy('denied')
+        rejected = 'r', gettext_lazy('rejected')
 
     creation_date = models.DateField(verbose_name=translations.creation_date, auto_now_add=True)
     user = models.ForeignKey(

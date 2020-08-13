@@ -11,6 +11,8 @@ from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import CreateView, UpdateView, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required]
+from django.http import HttpResponseBadRequest
 from . import models
 from .forms import Register, Profile
 
@@ -105,3 +107,15 @@ class ProfileView(LoginRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         return self.request.user
+
+
+@login_required
+def invite_actions(request, invite_id: int, action: str):
+    try:
+        action = UserInvite.Status(action)
+    except ValueError:
+        return HttpresponseBadRequest('This action does not exist !')
+    invite = get_object_or_404(UserInvite, id=invite_id, status=UserInvite.Status.pending)
+    invite.status = action
+    invite.save()
+    return redirect('account:invites')

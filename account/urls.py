@@ -13,5 +13,6 @@ urlpatterns = (
     path('verify-email/<str:key>/', views.verify_email, name='verify_email'),
     path('register-complete/', views.register_complete, name='register_complete'),
     path('profile/', views.ProfileView.as_view(), name='profile'),
-    path('invites/<int:page>/', views.Invites.as_view(), name='invites')
+    path('invites/<int:page>/', views.Invites.as_view(), name='invites'),
+    path('invite-actions/<int:invite_id>/<str:action>/', views.invite_actions, name='invite_actions')
 )
