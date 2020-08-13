@@ -253,14 +253,14 @@ def take_actions(request, object_id: int, object_type: str, action: str):
             models.Member.objects.get(
                 user=request.user,
                 rank__in=(models.Member.Rank.admin, models.Member.Rank.owner),
-                group=snippet.group
+                group=target_object.group
                 )
         except models.Member.DoesNotExists:
             return HttpResponseForbidden('You are not a group admin !')
         else:
-            take_snippet_action(snippet, action)
+            take_snippet_action(target_object, action)
     elif action is types.Actions.DELETE or object_type is not types.Types.Member:
-        take_action(snippet, action)
+        take_action(target_object, action)
     if action is types.Actions.CLOSE_SNIPPET:
         return redirect('snippets:snippet', pk=snippet_id)
     elif action is types.Actions.DELETE:

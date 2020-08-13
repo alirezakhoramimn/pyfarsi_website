@@ -1,8 +1,9 @@
 from django.contrib.auth import views as auth_views
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
+from django.db.models import Q
 from .models import Validation, User
-from snippets.models import UserInvite
+from snippets.models import UserInvite, Member
 from django.utils.html import strip_tags
 from .tasks import remove_user
 from .decorators import not_logged_in
@@ -14,6 +15,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required]
 from django.http import HttpResponseBadRequest
 from . import models
+from utils.functions import get_filters
 from .forms import Register, Profile
 
 
@@ -81,11 +83,30 @@ class Invites(LoginrequiredMixin, ListView):
 
     def get_queryset(self):
         all_invites = UserInvite.objects.filter(user=self.request.user)
-        if self.request.GET.get('status'):
-            status_filters = self.request.GET['status'].split(', ')
-            if all(status in UserInvite.Status.values for status in status_filters):
+        if self.request.GET.get('status') and \
+            status_filters := get_filters(self.requesr.GET['status'], UserInvite.Status):
                 all_invites = all_invites.filter(status__in=status_filters)
         return all_invites
+
+
+class MemberShips(LoginRequiredMixin, ListView):
+    template_name = 'account/memberships.html'
+    paginate_by = 15
+
+    def get_queryset(self):
+        memberships = Member.objects.filter(user=self.request.user)
+        if keyword := self.request.GET.get('q'):
+            memberships = memberships.filter(
+                Q(group__name__icontains=keyword) |
+                Q(group__description__icontains=keyword)
+            )
+        if self.request.GET.get('status') and \
+            status_filters := get_filters(self.request.GET['status'], Member.Status):
+                memberships = memberships.filter(status__in=status_filters)
+        if self.request.GET.get('rank') and \
+            rank_filters := get_filters(self.request.GET['rank'], Member.Rank):
+            memberships = memberships.filter(rank__in=rank_filters)
+        return memberships
 
 
 @not_logged_in
