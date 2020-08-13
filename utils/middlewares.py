@@ -8,6 +8,6 @@ class SaveIP:
 
     def __call__(self, request: HttpRequest):
         if request.user.is_authenticated:
-            request.user.ip = get_client_ip(request)[0]
+            request.user.ip = request.headers.get('CF-Connecting-IP', get_client_ip(request)[0])
             request.user.save()
         return self.get_response(request)
