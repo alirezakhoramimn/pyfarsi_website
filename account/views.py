@@ -2,13 +2,14 @@ from django.contrib.auth import views as auth_views
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from .models import Validation, User
+from snippets.models import UserInvite
 from django.utils.html import strip_tags
 from .tasks import remove_user
 from .decorators import not_logged_in
 from .mixins import NotLoggedIn
 from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import CreateView, UpdateView
+from django.views.generic import CreateView, UpdateView, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from . import models
 from .forms import Register, Profile
@@ -70,6 +71,19 @@ class RegisterView(NotLoggedIn, CreateView):
         )
         remove_user(temp_user.username)
         return redirect(self.success_url)
+
+
+class Invites(LoginrequiredMixin, ListView):
+    template_name = 'account/invites.html'
+    paginate_by = 15
+
+    def get_queryset(self):
+        all_invites = UserInvite.objects.filter(user=self.request.user)
+        if self.request.GET.get('status'):
+            status_filters = self.request.GET['status'].split(', ')
+            if all(status in UserInvite.Status.values for status in status_filters):
+                all_invites = all_invites.filter(status__in=status_filters)
+        return all_invites
 
 
 @not_logged_in
