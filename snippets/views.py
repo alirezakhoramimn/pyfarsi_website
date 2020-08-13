@@ -229,6 +229,8 @@ def join_group_with_link(request, invite_id):
 @login_required
 def join_group(request, group_id):
     group = get_object_or_404(models.Group, id=group_id)
+    status = models.Member.Status.pending if group.type is models.Group.Type.Private else \
+        models.Member.Status.member
     models.Member.objects.get_or_create(
         user=request.user, group=group, defaults={'status': models.Member.Status.pending}
         )
