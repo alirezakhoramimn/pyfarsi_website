@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # 3rd party
+    'graphene_django',
     'phonenumber_field',
     'ckeditor',
     'ckeditor_uploader',
@@ -127,3 +128,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = 'emails'
 CKEDITOR_UPLOAD_PATH = 'ckeditor'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+# GraphQL 
+GRAPHENE = {
+    "SCHEMA": "pyfarsi_website.schema.schema"
+}
